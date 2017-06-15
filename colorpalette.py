@@ -29,7 +29,7 @@ def _read_file(f_p):
 
 
 class PaletteColor(object):
-    def __init__(self, xml: ElementTree.ElementTree):
+    def __init__(self, xml):
         self._xml = xml
         self._color_palette = {}
 
@@ -65,10 +65,12 @@ class XmlColor(PaletteColor):
         self._color_list_not_used = []
         self._item_color_dict = {}
 
-    GRADIENTCOLOR1 = "gradientColor1"
-    GRADIENTCOLOR2 = "gradientColor2"
-    COLORINDEXES = "colorIndexes"
-    PAINTCOLORINDEXES = "paintColorIndexes"
+    COLOR_ATTRIB_LIST = [
+        "gradientColor1",
+        "gradientColor2",
+        "colorIndexes",
+        "paintColorIndexes"
+    ]
 
     @property
     def color_list_not_used(self):
@@ -90,26 +92,11 @@ class XmlColor(PaletteColor):
         color_list_in_items = []
         for item in self._xml.iter():
             color_dict = {}
-            if item.attrib[self.GRADIENTCOLOR1] != "":
-                color_dict[self.GRADIENTCOLOR1] = item.attrib[self.GRADIENTCOLOR1]
-                color_list_in_items.append(item.attrib[self.GRADIENTCOLOR1])
-                self._item_color_dict[item.attrib[self.GRADIENTCOLOR1]] = super().color_palette[
-                    item.attrib[self.GRADIENTCOLOR1]]
-            if item.attrib[self.GRADIENTCOLOR2] != "":
-                color_dict[self.GRADIENTCOLOR2] = item.attrib[self.GRADIENTCOLOR2]
-                color_list_in_items.append(item.attrib[self.GRADIENTCOLOR2])
-                self._item_color_dict[item.attrib[self.GRADIENTCOLOR2]] = super().color_palette[
-                    item.attrib[self.GRADIENTCOLOR2]]
-            if item.attrib[self.COLORINDEXES] != "":
-                color_dict[self.COLORINDEXES] = item.attrib[self.COLORINDEXES]
-                color_list_in_items.append(item.attrib[self.COLORINDEXES])
-                self._item_color_dict[item.attrib[self.COLORINDEXES]] = super().color_palette[
-                    item.attrib[self.COLORINDEXES]]
-            if item.attrib[self.PAINTCOLORINDEXES] != "":
-                color_dict[self.PAINTCOLORINDEXES] = item.attrib[self.PAINTCOLORINDEXES]
-                color_list_in_items.append(item.attrib[self.PAINTCOLORINDEXES])
-                self._item_color_dict[item.attrib[self.PAINTCOLORINDEXES]] = super().color_palette[
-                    item.attrib[self.PAINTCOLORINDEXES]]
+            for attrib in self.COLOR_ATTRIB_LIST:
+                if attrib in item.attrib:
+                    color_dict[attrib] = item.attrib[attrib]
+                    color_list_in_items.append(item.attrib[attrib])
+                    self._item_color_dict[item.attrib[attrib]] = super().color_palette[item.attrib[attrib]]
             self._color_items.append((item.tag, item.attrib["name"], color_dict))
         for k in self._color_palette:
             if k not in color_list_in_items:
