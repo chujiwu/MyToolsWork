@@ -45,9 +45,10 @@ class PaletteColor(object):
         idx = ""
         black_first_shown = False
         for k in self._color_palette:
-            if self._color_palette[k] == COLOR_BLACK:
+            if not black_first_shown and self._color_palette[k] == COLOR_BLACK:
                 black_first_shown = True
                 idx = k
+                continue
             if black_first_shown:
                 if self._color_palette[k] != COLOR_BLACK:
                     black_first_shown = False
@@ -59,8 +60,9 @@ class PaletteColor(object):
 
 
 class XmlColor(PaletteColor):
-    def __init__(self, xml: ElementTree.ElementTree):
+    def __init__(self, xml: ElementTree.ElementTree, f_p: str):
         super().__init__(xml)
+        self._xml_path = f_p
         self._color_items = []
         self._color_list_not_used = []
         self._item_color_dict = {}
@@ -71,6 +73,10 @@ class XmlColor(PaletteColor):
         "colorIndexes",
         "paintColorIndexes"
     ]
+
+    @property
+    def xml_path(self):
+        return self._xml_path
 
     @property
     def color_list_not_used(self):
@@ -94,10 +100,14 @@ class XmlColor(PaletteColor):
             color_dict = {}
             for attrib in self.COLOR_ATTRIB_LIST:
                 if attrib in item.attrib:
-                    color_dict[attrib] = item.attrib[attrib]
-                    color_list_in_items.append(item.attrib[attrib])
-                    self._item_color_dict[item.attrib[attrib]] = super().color_palette[item.attrib[attrib]]
-            self._color_items.append((item.tag, item.attrib["name"], color_dict))
+                    color_index = int(item.attrib[attrib])
+                    if color_index != 0:
+                        color_index_in_palette = "C" + str(color_index - 1)
+                        color_dict[attrib] = self.color_palette[color_index_in_palette]
+                        color_list_in_items.append(color_index_in_palette)
+                        self._item_color_dict[color_index_in_palette] = self.color_palette[color_index_in_palette]
+                if color_dict:
+                    self._color_items.append((item.tag, item.attrib["name"], color_dict))
         for k in self._color_palette:
             if k not in color_list_in_items:
                 self._color_list_not_used.append(k)
@@ -128,21 +138,30 @@ def get_all_update_color(palette_color: PaletteColor, xml_color_list: [XmlColor]
 
 
 def update_cp_content(read_lines, update_color_list, start_update_idx):
-    idx_int = int(start_update_idx[1])
+    updated_content = []
+    idx_int = int(start_update_idx[1:])
     for line in read_lines:
         if "<ColorPalette" in line:
             for color in update_color_list:
-                color_for_update_str = "c" + str(idx_int) + "=\"255,255,255\""
-                color_updated_str = "c" + str(idx_int) + "=\"" + color + "\""
-                line.replace(color_for_update_str, color_updated_str)
+                color_for_update_str = "C" + str(idx_int) + "=\"255,255,255\""
+                color_updated_str = "C" + str(idx_int) + "=\"" + color + "\""
+                line = line.replace(color_for_update_str, color_updated_str)
                 idx_int += 1
-    return read_lines
+        updated_content.append(line)
+    return updated_content
+
 
 def update_color_palette(cp_path, palette_color: PaletteColor, xml_color_list: [XmlColor]):
     read_lines = _read_file(cp_path)
-    update_color_list = get_all_update_color(cp_xml, xml_color_list)
+    update_color_list = get_all_update_color(palette_color, xml_color_list)
     read_lines = update_cp_content(read_lines, update_color_list, palette_color.get_hidden_color_start_idx())
     # TODO
+
+
+def update_xml_color(palette_color: PaletteColor, xml_color_list: [XmlColor]):
+    for xml_color in xml_color_list:
+        pass
+    pass
 
 
 if __name__ == "__main__":
@@ -153,10 +172,11 @@ if __name__ == "__main__":
     xml_color_list = []
     for f in scan_all_file("C:\\Users\\xin.cheng\\Desktop\\temp\\for check\\color", ".xml"):
         xml = ElementTree.parse(f)
-        xml_color = XmlColor(xml)
+        xml_color = XmlColor(xml, f)
         xml_color.analyze_color()
         xml_color_list.append(xml_color)
     update_color_palette(cp_path, palette_color, xml_color_list)
+    update_xml_color(palette_color, xml_color_list)
     # f = open("C:\\Users\\xin.cheng\\Desktop\\temp\\for check\\test.xml", "rb")
     # s = f.read()
     # encode_dict = chardet.detect(s)
