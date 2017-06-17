@@ -6,14 +6,14 @@ COLOR_WHITE = "0,0,0"
 COLOR_BLACK = "255,255,255"
 
 
-def scan_all_file(folder_path, suffix):
+def scan_all_file(folder_path, suffix, excepet_suffix):
     f_list = os.listdir(folder_path)
     for f in f_list:
         full_path = os.path.join(folder_path, f)
-        if os.path.isfile(full_path) and str(f).endswith(suffix):
+        if os.path.isfile(full_path) and str(f).endswith(suffix) and not str(f).endswith(excepet_suffix):
             yield full_path
         elif os.path.isdir(full_path):
-            for f_child in scan_all_file(full_path, suffix):
+            for f_child in scan_all_file(full_path, suffix, excepet_suffix):
                 yield f_child
         else:
             pass
@@ -163,7 +163,7 @@ def update_color_palette(palette_color: PaletteColor, xml_color_list: [XmlColor]
     read_lines = _read_file(palette_color.path)
     update_color_list = get_all_update_color(palette_color, xml_color_list)
     read_lines = update_cp_content(read_lines, update_color_list, palette_color.get_hidden_color_start_idx())
-    # TODO
+    print(read_lines)
 
 
 def update_xml_color_files(palette_color: PaletteColor, xml_color_list: [XmlColor]):
@@ -204,21 +204,24 @@ def update_xml_color(palette_color: PaletteColor, xml_color: XmlColor):
             if "<" + color_item[0] + " " in line:
                 line = update_item_color(line, color_item, palette_color.color_palette)
         updated_lines += line
+    print(updated_lines)
 
 
 if __name__ == "__main__":
-    cp_path = "C:\\Users\\xin.cheng\\Desktop\\temp\\for check\\color\\color.plt"
+    cp_path = os.path.join(os.getcwd(), "temp", "color.plt.xml")
     cp_xml = ElementTree.parse(cp_path)
     palette_color = PaletteColor(cp_xml, cp_path)
     palette_color.analyze_color()
     xml_color_list = []
-    for f in scan_all_file("C:\\Users\\xin.cheng\\Desktop\\temp\\for check\\color", ".xml"):
+    for f in scan_all_file(os.path.join(os.getcwd(), "temp"), ".xml", ".plt.xml"):
         xml = ElementTree.parse(f)
         xml_color = XmlColor(xml, f)
         xml_color.analyze_color()
         xml_color_list.append(xml_color)
-    update_color_palette(cp_path, palette_color, xml_color_list)
-    update_xml_color(palette_color, xml_color_list)
+    update_color_palette(palette_color, xml_color_list)
+    print("--------------------------------")
+    print("--------------------------------")
+    update_xml_color_files(palette_color, xml_color_list)
     # f = open("C:\\Users\\xin.cheng\\Desktop\\temp\\for check\\test.xml", "rb")
     # s = f.read()
     # encode_dict = chardet.detect(s)
