@@ -10,7 +10,7 @@ def scan_all_file(folder_path, suffix):
     f_list = os.listdir(folder_path)
     for f in f_list:
         full_path = os.path.join(folder_path, f)
-        if os.path.isfile(full_path) and str(f).endswith(suffix):
+        if os.path.isfile(full_path) and str(f).endswith(suffix) and len(str(f).split(".")) == 2:
             yield full_path
         elif os.path.isdir(full_path):
             for f_child in scan_all_file(full_path, suffix):
@@ -29,8 +29,8 @@ def _read_file(f_p):
 
 
 class PaletteColor(object):
-    def __init__(self, xml, f_p: str):
-        self._xml = xml
+    def __init__(self, f_p: str):
+        self._xml = ElementTree.parse(f_p)
         self._path = f_p
         self._color_palette = {}
 
@@ -65,8 +65,8 @@ class PaletteColor(object):
 
 
 class XmlColor(PaletteColor):
-    def __init__(self, xml: ElementTree.ElementTree, f_p: str):
-        super().__init__(xml, f_p)
+    def __init__(self, f_p: str):
+        super().__init__(f_p)
         self._color_items = []
         self._color_list_not_used = []
         self._item_color_dict = {}
@@ -217,19 +217,19 @@ def update_xml_color(palette_color: PaletteColor, xml_color: XmlColor):
 if __name__ == "__main__":
     cp_path = os.path.join(os.getcwd(), "temp", "color.plt.xml")
     cp_xml = ElementTree.parse(cp_path)
-    palette_color = PaletteColor(cp_xml, cp_path)
+    palette_color = PaletteColor(cp_path)
     palette_color.analyze_color()
     xml_color_list = []
     for f in scan_all_file(os.path.join(os.getcwd(), "temp"), ".xml"):
         xml = ElementTree.parse(f)
-        xml_color = XmlColor(xml, f)
+        xml_color = XmlColor(f)
         xml_color.analyze_color()
         xml_color_list.append(xml_color)
     update_color_palette(palette_color, xml_color_list)
     print("--------------------------------")
     print("--------------------------------")
     updated_color_palette_path = palette_color.path.replace(".plt", "_updated.plt")
-    updated_color_palette = PaletteColor(ElementTree.parse(updated_color_palette_path), updated_color_palette_path)
+    updated_color_palette = PaletteColor(updated_color_palette_path)
     updated_color_palette.analyze_color()
     update_xml_color_files(updated_color_palette, xml_color_list)
     # f = open("C:\\Users\\xin.cheng\\Desktop\\temp\\for check\\test.xml", "rb")
