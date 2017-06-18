@@ -164,6 +164,9 @@ def update_color_palette(palette_color: PaletteColor, xml_color_list: [XmlColor]
     update_color_list = get_all_update_color(palette_color, xml_color_list)
     read_lines = update_cp_content(read_lines, update_color_list, palette_color.get_hidden_color_start_idx())
     print(read_lines)
+    with open(palette_color.path.replace(".plt", "_updated.plt"), "w") as new_color_palette:
+        new_color_palette.writelines(read_lines)
+    new_color_palette.close()
 
 
 def update_xml_color_files(palette_color: PaletteColor, xml_color_list: [XmlColor]):
@@ -205,6 +208,9 @@ def update_xml_color(palette_color: PaletteColor, xml_color: XmlColor):
                 line = update_item_color(line, color_item, palette_color.color_palette)
         updated_lines += line
     print(updated_lines)
+    with open(xml_color.path.replace(".xml", "_updated.xml"), "w") as new_xml_color:
+        new_xml_color.writelines(xml_lines)
+        new_xml_color.close()
 
 
 if __name__ == "__main__":
@@ -221,7 +227,10 @@ if __name__ == "__main__":
     update_color_palette(palette_color, xml_color_list)
     print("--------------------------------")
     print("--------------------------------")
-    update_xml_color_files(palette_color, xml_color_list)
+    updated_color_palette_path = palette_color.path.replace(".plt", "_updated.plt")
+    updated_color_palette = PaletteColor(ElementTree.parse(updated_color_palette_path), updated_color_palette_path)
+    updated_color_palette.analyze_color()
+    update_xml_color_files(updated_color_palette, xml_color_list)
     # f = open("C:\\Users\\xin.cheng\\Desktop\\temp\\for check\\test.xml", "rb")
     # s = f.read()
     # encode_dict = chardet.detect(s)
