@@ -6,14 +6,14 @@ COLOR_WHITE = "0,0,0"
 COLOR_BLACK = "255,255,255"
 
 
-def scan_all_file(folder_path, suffix, excepet_suffix):
+def scan_all_file(folder_path, suffix):
     f_list = os.listdir(folder_path)
     for f in f_list:
         full_path = os.path.join(folder_path, f)
-        if os.path.isfile(full_path) and str(f).endswith(suffix) and not str(f).endswith(excepet_suffix):
+        if os.path.isfile(full_path) and str(f).endswith(suffix):
             yield full_path
         elif os.path.isdir(full_path):
-            for f_child in scan_all_file(full_path, suffix, excepet_suffix):
+            for f_child in scan_all_file(full_path, suffix):
                 yield f_child
         else:
             pass
@@ -174,7 +174,7 @@ def update_xml_color_files(palette_color: PaletteColor, xml_color_list: [XmlColo
         update_xml_color(palette_color, xml_color)
 
 
-def replace_xml_color_palette(line, palette_color: PaletteColor):
+def replace_xml_color_palette(palette_color: PaletteColor):
     updated_line = ""
     palette_color_lines = _read_file(palette_color.path)
     for line in palette_color_lines:
@@ -202,7 +202,8 @@ def update_xml_color(palette_color: PaletteColor, xml_color: XmlColor):
     xml_lines = _read_file(xml_color.path)
     for line in xml_lines:
         if "<ColorPalette" in line:
-            line = replace_xml_color_palette(line, palette_color)
+            line = replace_xml_color_palette(palette_color)
+            continue
         for color_item in xml_color.color_items:
             if "<" + color_item[0] + " " in line:
                 line = update_item_color(line, color_item, palette_color.color_palette)
@@ -219,7 +220,7 @@ if __name__ == "__main__":
     palette_color = PaletteColor(cp_xml, cp_path)
     palette_color.analyze_color()
     xml_color_list = []
-    for f in scan_all_file(os.path.join(os.getcwd(), "temp"), ".xml", ".plt.xml"):
+    for f in scan_all_file(os.path.join(os.getcwd(), "temp"), ".xml"):
         xml = ElementTree.parse(f)
         xml_color = XmlColor(xml, f)
         xml_color.analyze_color()
