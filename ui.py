@@ -1,14 +1,17 @@
 import tkinter
 
-class Ui(object):
+
+class ColorPalette(object):
     def __init__(self):
         pass
 
-    def start_up(self):
-        self._ui_initialize()
+    def set_color_palette(self):
+        pass
 
-    def _ui_initialize(self):
-        root = tkinter.Tk()
-        root.geometry(600, 600)
-        root.mainloop()
+    def update_color_palette(self):
+        pass
+
+def rgb_to_color(rgb):
+    l = rgb.split(",")
+    if len(l) == 3:
         pass
